@@ -83,8 +83,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             updateMenuItem("Analizuję zrzut ekranu...")
 
         case .result(let answer):
-            button.image = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
-            button.title = " \(answer)"
+            button.image = nil
+            button.title = answer
             updateMenuItem("Odpowiedź: \(answer)")
 
         case .error(let msg):
