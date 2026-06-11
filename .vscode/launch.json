@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:TestAnswerBar}",
+            "name": "Debug TestAnswerBar",
+            "target": "TestAnswerBar",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug TestAnswerBar"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:TestAnswerBar}",
+            "name": "Release TestAnswerBar",
+            "target": "TestAnswerBar",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release TestAnswerBar"
+        }
+    ]
+}

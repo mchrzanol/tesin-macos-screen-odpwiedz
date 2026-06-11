@@ -1,0 +1,9 @@
+.env
+Screenshots/
+answers.log
+.build/
+.swiftpm/
+*.xcodeproj/xcuserdata/
+xcuserdata/
+DerivedData/
+.DS_Store
