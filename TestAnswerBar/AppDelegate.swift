@@ -13,7 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("==========================================")
         print("  TestAnswerBar uruchomiony!")
-        print("  Skrót: Cmd+Shift+1 = zrzut + analiza")
+        print("  Skrót: Fn+Shift = zrzut + analiza")
         print("  Ctrl+C = zamknij")
         print("==========================================")
 
@@ -39,7 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Build the dropdown menu
         let menu = NSMenu()
 
-        let statusMenuItem = NSMenuItem(title: "Gotowy (Cmd+Shift+1)", action: nil, keyEquivalent: "")
+        let statusMenuItem = NSMenuItem(title: "Gotowy (Fn+Shift)", action: nil, keyEquivalent: "")
         statusMenuItem.tag = 100
         menu.addItem(statusMenuItem)
 
@@ -75,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case .idle:
             button.image = NSImage(systemSymbolName: "brain", accessibilityDescription: nil)
             button.title = ""
-            updateMenuItem("Gotowy (Cmd+Shift+1)")
+            updateMenuItem("Gotowy (Fn+Shift)")
 
         case .processing:
             button.title = ""
@@ -100,25 +100,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    // MARK: - Spinning animation (cycles SF Symbols)
+    // MARK: - Loading animation (subtle opacity pulse)
 
-    private let spinFrames = [
-        "circle.dotted",
-        "circle.bottomhalf.filled",
-        "circle.lefthalf.filled",
-        "circle.tophalf.filled",
-        "circle.righthalf.filled",
-    ]
-    private var spinIndex = 0
+    private var pulseBright = false
 
     private func startLoadingAnimation(button: NSStatusBarButton) {
-        spinIndex = 0
-        button.image = NSImage(systemSymbolName: spinFrames[0], accessibilityDescription: nil)
-        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        // Keep the regular brain icon, just breathe its opacity so it's
+        // noticeable without being distracting.
+        button.image = NSImage(systemSymbolName: "brain", accessibilityDescription: nil)
+        pulseBright = false
+        button.alphaValue = 0.3
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.7, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                self.spinIndex = (self.spinIndex + 1) % self.spinFrames.count
-                button.image = NSImage(systemSymbolName: self.spinFrames[self.spinIndex], accessibilityDescription: nil)
+                self.pulseBright.toggle()
+                NSAnimationContext.runAnimationGroup { ctx in
+                    ctx.duration = 0.7
+                    button.animator().alphaValue = self.pulseBright ? 1.0 : 0.3
+                }
             }
         }
     }
@@ -126,17 +125,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func stopAnimation() {
         animationTimer?.invalidate()
         animationTimer = nil
+        statusItem?.button?.alphaValue = 1.0
     }
 
     // MARK: - Global Hotkey
 
+    // Tracks whether Fn+Shift were both held on the previous event, so we
+    // only fire once when the combo becomes active (not on every release).
+    private var hotkeyActive = false
+
     private func setupGlobalHotkey() {
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        // Fn+Shift are pure modifiers, so listen for .flagsChanged rather than .keyDown.
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             guard let self else { return }
-            if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 18 {
+            let comboHeld = event.modifierFlags.contains([.function, .shift])
+            if comboHeld && !self.hotkeyActive {
+                self.hotkeyActive = true
                 Task { @MainActor in
                     await self.appState.captureAndAnalyze()
                 }
+            } else if !comboHeld {
+                self.hotkeyActive = false
             }
         }
     }

@@ -16,7 +16,7 @@ enum NetworkError: LocalizedError {
 
 final class NetworkManager {
     private let endpoint = URL(string: "https://openrouter.ai/api/v1/chat/completions")!
-    private let model = "google/gemini-3-flash-preview"
+    private let model = "anthropic/claude-sonnet-4.6"
 
     private let systemPrompt = """
         Przeanalizuj obraz z pytaniem testowym. Uwaga: mogą to być pytania jedno- lub wielokrotnego wyboru. \
