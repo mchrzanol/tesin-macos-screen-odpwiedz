@@ -52,4 +52,11 @@ final class AppState: ObservableObject {
             }
         }
     }
+
+    /// Clears any displayed answer/error and returns to the idle (waiting) icon.
+    func dismiss() {
+        resetTask?.cancel()
+        status = .idle
+        print("[LOG] Odpowiedź ukryta — powrót do stanu spoczynku")
+    }
 }

@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         print("==========================================")
         print("  TestAnswerBar uruchomiony!")
         print("  Skrót: Fn+Shift = zrzut + analiza")
+        print("  Skrót: Fn+Caps = ukryj odpowiedź")
         print("  Ctrl+C = zamknij")
         print("==========================================")
 
@@ -134,10 +135,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // only fire once when the combo becomes active (not on every release).
     private var hotkeyActive = false
 
+    // Same idea for the Fn+Caps "dismiss" combo, tracked independently.
+    private var dismissActive = false
+
     private func setupGlobalHotkey() {
         // Fn+Shift are pure modifiers, so listen for .flagsChanged rather than .keyDown.
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] event in
             guard let self else { return }
+
             let comboHeld = event.modifierFlags.contains([.function, .shift])
             if comboHeld && !self.hotkeyActive {
                 self.hotkeyActive = true
@@ -146,6 +151,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             } else if !comboHeld {
                 self.hotkeyActive = false
+            }
+
+            // Fn+Caps hides the current answer and returns to the waiting icon.
+            let dismissHeld = event.modifierFlags.contains([.function, .capsLock])
+            if dismissHeld && !self.dismissActive {
+                self.dismissActive = true
+                Task { @MainActor in
+                    self.appState.dismiss()
+                }
+            } else if !dismissHeld {
+                self.dismissActive = false
             }
         }
     }
